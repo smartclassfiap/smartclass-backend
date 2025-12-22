@@ -79,6 +79,6 @@ describe("Users API", () => {
 
         const res = await request(app).delete(`/users/${idParaRemover}`);
         expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("messsage");
+        expect(res.body.user.isActive).toBe(false);
     });
 });
