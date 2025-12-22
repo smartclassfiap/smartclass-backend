@@ -108,12 +108,16 @@ export const updateUser = async (req, res) => {
  */
 export const deleteUser = async (req, res) => {
     try {
-        const deleted = await User.findByIdAndDelete(req.params.id);
+        const deleted = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: { isActive: false } },
+            { new: true, runValidators: true }
+        );
 
         if (!deleted) {
             return res.status(500).json({ error: "User não encontrado" });
         }
-        res.json({ messsage: "User removido com sucesso", user: deleted });
+        res.json({ message: "User inativado com sucesso", user: deleted });
     } catch (err) {
         res.status(500).json({
             error: "Erro ao remover User",
