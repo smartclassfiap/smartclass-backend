@@ -6,9 +6,12 @@ import {
     createUser,
     updateUser,
     deleteUser,
+    loginUser,
 } from "../controllers/user.controller.js";
 
 const routerUsers = Router();
+
+routerUsers.get('/users/login', loginUser);
 
 /**
  * @swagger

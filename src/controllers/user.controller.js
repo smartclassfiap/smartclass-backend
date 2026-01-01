@@ -1,9 +1,55 @@
 import { User } from "../models/user.model.js";
+import bcrypt from "bcryptjs";
 
 /*
  * GET/users
  *  Lista de todos os usuarios
  */
+
+export const loginUser = async (req, res) => {
+    const { email, password } = req.query;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Email e senha são obrigatórios",
+        });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({
+                message: "Email ou senha incorretos",
+            });
+        }
+
+        if (!user.isActive) {
+            return res.status(403).json({
+                message: "Usuário inativado",
+            });
+        }
+
+        const senhaValida = await bcrypt.compare(password, user.password);
+
+        if (!senhaValida) {
+            return res.status(401).json({
+                message: "Email ou senha incorretos",
+            });
+        }
+
+        const { password: _, ...userSemSenha } = user.toObject();
+
+        return res.status(200).json(userSemSenha);
+    } catch (error) {
+        console.log(error.message);
+        
+        return res.status(500).json({
+            message: "Erro ao realizar login",
+            error: error.message,
+        });
+    }
+};
 
 export const getAllUsers = async (req, res) => {
     try {
