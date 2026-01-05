@@ -48,34 +48,49 @@ export const getPostById = async (req, res) => {
  * Cria uma nova postagem
  */
 export const createPost = async (req, res) => {
-    const { title, content, author, userId, urlImage, posted, excluded } =
-        req.body;
+    const {
+        title,
+        content,
+        matter,
+        classNumber,
+        teacher,
+        userId,
+        image,
+        posted,
+        excluded,
+    } = req.body;
 
     if (
         !title ||
+        !matter ||
+        !classNumber ||
         !content ||
-        !author ||
+        !teacher ||
         !userId ||
-        !urlImage ||
+        !image ||
         posted === undefined ||
         excluded === undefined
     ) {
         return res.status(400).json({
-            error: "Título, conteúdo, autor, usuário e url da imagem, são obrigatórios",
+            error: "Título, conteúdo, matéria, professor, usuário e url da imagem, são obrigatórios",
         });
     }
     try {
         const newPost = await Post.create({
             title,
+            matter,
+            classNumber,
             content,
-            author,
+            teacher,
             userId,
-            urlImage,
+            image,
             posted,
             excluded,
         });
         res.status(201).json(newPost);
     } catch (err) {
+        console.log(err.message);
+
         res.status(500).json({
             error: "Erro ao criar post",
             details: err.message,
@@ -136,13 +151,14 @@ export const deletePost = async (req, res) => {
  */
 export const searchPosts = async (req, res) => {
     const { q } = req.query;
+
     if (!q) {
         return res
             .status(400)
             .json({ error: 'Parâmetro de busca "q" é obrigatório' });
     }
+
     try {
-        // Protege contra regex inválido
         let regex;
         try {
             regex = new RegExp(q, "i");
@@ -151,13 +167,22 @@ export const searchPosts = async (req, res) => {
                 .status(400)
                 .json({ error: "Expressão de busca inválida" });
         }
+
         const results = await Post.find({
-            $or: [{ title: regex }, { content: regex }],
+            excluded: false,
+            posted: true,
+            $or: [
+                { title: regex },
+                { matter: regex },
+                { teacher: regex },
+                { "content.value": regex },
+            ],
         });
-        res.json(results); // sempre retorna array, mesmo vazio
+
+        return res.status(200).json(results);
     } catch (err) {
         console.error("Erro ao buscar posts:", err);
-        res.status(500).json({
+        return res.status(500).json({
             error: "Erro ao buscar posts",
             details: err.message,
         });

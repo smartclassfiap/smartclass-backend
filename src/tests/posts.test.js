@@ -21,15 +21,31 @@ describe("Posts API", () => {
     let postId;
 
     it("deve criar um novo post", async () => {
-        const res = await request(app).post("/posts").send({
-            title: "Teste",
-            content: "Conteúdo",
-            author: "Autor",
-            userId: 1,
-            urlImage: "http://image.url",
-            posted: true,
-            excluded: false,
-        });
+        const res = await request(app)
+            .post("/posts")
+            .send({
+                title: "Teste",
+                content: [
+                    { type: "subtitle", value: "O que é UX" },
+                    {
+                        type: "contentSubtitle",
+                        value: "UX trata da experiência do usuário ao interagir com um produto.",
+                    },
+                    {
+                        type: "initialConcepts",
+                        value: "Usabilidade, acessibilidade e satisfação.",
+                    },
+                    { type: "link", value: "https://www.example.com" },
+                ],
+                matter: "Matemática",
+                classNumber: "101",
+                teacher: "Professor X",
+                image: "http://image.url",
+                author: "Autor",
+                userId: 1,
+                posted: true,
+                excluded: false,
+            });
         expect(res.statusCode).toBe(201);
         expect(res.body).toHaveProperty("_id");
         postId = res.body._id;
@@ -56,18 +72,22 @@ describe("Posts API", () => {
     });
 
     it("deve buscar posts por palavra-chave", async () => {
-        // Cria e atualiza um post antes, se necessário
-        const post = await request(app).post("/posts").send({
-            title: "Palavra-chave",
-            content: "Conteúdo",
-            author: "Autor",
-            userId: 1,
-            urlImage: "http://image.url",
-            posted: true,
-            excluded: false,
-        });
+        await request(app)
+            .post("/posts")
+            .send({
+                title: "Palavra-chave",
+                matter: "UI/UX para desenvolvedores",
+                classNumber: "Aula 1",
+                teacher: "Gustavo",
+                image: "/classes/banner-aula-1.png",
+                content: [{ type: "subtitle", value: "Conteúdo da aula" }],
+                userId: "1",
+                posted: true,
+                excluded: false,
+            });
 
         const res = await request(app).get("/posts/search?q=Palavra-chave");
+
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
         expect(res.body.length).toBeGreaterThan(0);
@@ -76,15 +96,19 @@ describe("Posts API", () => {
 
     it("deve remover um post", async () => {
         // Cria um post só para este teste
-        const post = await request(app).post("/posts").send({
-            title: "Para Remover",
-            content: "Conteúdo",
-            author: "Autor",
-            userId: 1,
-            urlImage: "http://image.url",
-            posted: true,
-            excluded: false,
-        });
+        const post = await request(app)
+            .post("/posts")
+            .send({
+                title: "Para Remover",
+                content: [{ type: "subtitle", value: "Conteúdo da aula" }],
+                matter: "Teste",
+                classNumber: "Aula X",
+                teacher: "Professor Y",
+                userId: 1,
+                image: "http://image.url",
+                posted: true,
+                excluded: false,
+            });
         const idParaRemover = post.body._id;
 
         const res = await request(app).delete(`/posts/${idParaRemover}`);
